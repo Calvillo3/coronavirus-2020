@@ -15,6 +15,7 @@ sys.path.insert(0, '..')
 
 from utils import data
 import os
+import matplotlib.pyplot as plt
 import sklearn
 import numpy as np
 from sklearn.neighbors import (
@@ -25,15 +26,15 @@ import json
 
 # ------------ HYPERPARAMETERS -------------
 BASE_PATH = '../COVID-19/csse_covid_19_data/'
-N_NEIGHBORS = 5
-MIN_CASES = 1000
+N_NEIGHBORS = 20
+MIN_CASES = 5000
 NORMALIZE = True
 # ------------------------------------------
 
 confirmed = os.path.join(
     BASE_PATH, 
     'csse_covid_19_time_series',
-    'time_series_19-covid-Confirmed.csv')
+    'time_series_covid19_confirmed_global.csv')
 confirmed = data.load_csv_data(confirmed)
 features = []
 targets = []
@@ -81,6 +82,20 @@ for _dist in ['minkowski', 'manhattan']:
         if val not in predictions:
             predictions[val] = {}
         predictions[val][_dist] = label.tolist()
+
+predictioncount = {}
+for i in predictions:
+    if predictions[i]["minkowski"][0] not in predictioncount:
+        predictioncount[predictions[i]["minkowski"][0]] = 1
+    else:
+        predictioncount[predictions[i]["minkowski"][0]] += 1
+print(predictioncount)
+plt.bar(range(len(predictioncount)), list(predictioncount.values()), align='center')
+plt.xticks(range(len(predictioncount)), list(predictioncount.keys()), rotation=55)
+plt.ylabel("Number of matches")
+plt.title("Matches/Country-diff (N neighbors = " + str(N_NEIGHBORS) + ", min cases =" + str(MIN_CASES) +")")
+#plt.legend([N_NEIGHBORS, MIN_CASES], ["N neighbors", "min cases"])
+plt.show()
 
 with open('results/knn_diff.json', 'w') as f:
     json.dump(predictions, f, indent=4)
